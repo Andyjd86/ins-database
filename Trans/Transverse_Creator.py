@@ -9,7 +9,7 @@ try:
 except:
     print ('I am unable to connect the database')
 cur = conn.cursor()
-ipath = 'j15ssa_nb'
+ipath = 'j18ssa_nb'
 fpath = 'C:\\Users\\Public\\Documents\\'+ipath+'\\'
 old_prj = 32630
 new_prj = 27700
@@ -101,7 +101,7 @@ for ffile in glob.glob(os.path.join(fpath+"input\\", '*.txt')):
                                                 elif 'Confidence (PC' in (i):
                                                     new_header_list.append('confidence')
                                                     create_table_list.append('confidence integer')
-                                                    column_header_list.append('confidence')                                                    
+                                                    column_header_list.append('confidence')
                                                 elif 'PC' in (i):
                                                     m = re.search('PC(.+?)_', (i))
                                                     if m:
@@ -140,7 +140,7 @@ for ffile in glob.glob(os.path.join(fpath+"input\\", '*.txt')):
                                                 elif (i)=='\t':
                                                     new_header_list.append('ignore'+str(j))
                                                     create_table_list.append('ignore'+str(j)+' text')
-                                                    j +=1                                                
+                                                    j +=1
                                                 else:
                                                     new_header_list.append('ignore'+str(j))
                                                     create_table_list.append('ignore'+str(j)+' text')
@@ -188,8 +188,8 @@ for ffile in glob.glob(os.path.join(fpath+"input\\", '*.txt')):
         cur.execute("""DROP TABLE %s;""" %(sql_table_name))
         conn.commit()
 cur.execute("""CREATE TABLE %s AS
-                SELECT 
-                g.path[1] as gid, 
+                SELECT
+                g.path[1] as gid,
                 g.geom::geometry(Polygon, 27700) as geom,
                 g.lane
                 FROM
@@ -205,12 +205,12 @@ cur.execute("""UPDATE %s set overlap = 'overlap', gid = sgrouptrans.pid
                                 SELECT dupetrans.id, max(dupetrans.tid) as pid, count(*)
                                 FROM(
                                         SELECT %s.id, section_label, section_chain, filename, trace, profile, %s.lane, %s.priority, %s.tid as tid
-                                        FROM %s 
-                                        INNER JOIN %s on st_contains(%s.geom, %s.geom) or st_touches(%s.geom, %s.geom) 
+                                        FROM %s
+                                        INNER JOIN %s on st_contains(%s.geom, %s.geom) or st_touches(%s.geom, %s.geom)
                                         ORDER BY section_chain, priority, profile, tid, lane, trace
                                 ) as dupetrans
                                 GROUP BY dupetrans.id
-                                HAVING count(*) > 1 
+                                HAVING count(*) > 1
                                 ORDER BY pid, id
                         ) as grouptrans
                 ) as sgrouptrans WHERE %s.id = sgrouptrans.id;""" %(transfile, transfile, transfile, transfile, bufferfile, bufferfile, transfile, bufferfile, transfile, bufferfile, transfile, transfile))
@@ -237,12 +237,12 @@ conn.commit()
 cur.execute("""UPDATE %s
                 SET dist_from = subquery.dist_from
                 FROM(
-                        SELECT t.id as fid, st_distance(t.point_to, r.point_from) as dist_from 
-                    FROM((SELECT id, section_chain, section_label, geom as point_to 
-                         FROM %s 
+                        SELECT t.id as fid, st_distance(t.point_to, r.point_from) as dist_from
+                    FROM((SELECT id, section_chain, section_label, geom as point_to
+                         FROM %s
                          WHERE dont_use IS NULL) as t
                          INNER JOIN
-                                (SELECT id, section_chain, section_label, geom as point_from 
+                                (SELECT id, section_chain, section_label, geom as point_from
                                 FROM %s
                                 WHERE cont_profile = 0) as r
                          ON t.section_label = r.section_label AND t.section_chain = r.section_chain)
@@ -262,7 +262,7 @@ conn.commit()
 cur.execute("""UPDATE %s SET pc15 = t4.eb_depth
                 FROM (
                 SELECT
-                  * 
+                  *
                 FROM (
                   SELECT
                     ROW_NUMBER() OVER (PARTITION BY t2.pid ORDER BY t2.dist) AS r,
