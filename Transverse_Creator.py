@@ -9,7 +9,7 @@ try:
 except:
     print ('I am unable to connect the database')
 cur = conn.cursor()
-ipath = 'j14ssa_nb'
+ipath = 'j15ssa_nb'
 fpath = 'C:\\Users\\Public\\Documents\\'+ipath+'\\'
 old_prj = 32630
 new_prj = 27700
