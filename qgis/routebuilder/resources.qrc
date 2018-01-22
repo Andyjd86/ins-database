@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/RouteBuilder" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
