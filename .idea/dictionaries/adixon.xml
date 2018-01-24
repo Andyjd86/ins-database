@@ -17,6 +17,7 @@
       <w>psql</w>
       <w>qgis</w>
       <w>shapefile</w>
+      <w>stdin</w>
     </words>
   </dictionary>
 </component>
