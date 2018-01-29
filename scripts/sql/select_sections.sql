@@ -14,7 +14,8 @@ SELECT section_label
 FROM (
 	SELECT section_label
 	FROM client.hapms_master
-	WHERE section
+	WHERE section_label != '0900M6/610'
+	AND section
 	IN (
 		SELECT unnest(id)
 		FROM client.testrecursive2

@@ -6,6 +6,7 @@ BEGIN
 EXECUTE format
     (
     'ALTER TABLE client.%I
+        ADD COLUMN fid bigserial,
         ADD COLUMN geom geometry,
         ADD COLUMN geom_m geometry;
 

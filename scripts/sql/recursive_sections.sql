@@ -2,8 +2,9 @@ DROP TABLE client.testrecursive;
 
 -- Create am empty table with auto_ID ready for the data
 
-CREATE TABLE client.testrecursive2 (
-	section_label character varying(30),
+CREATE TABLE client.testrecursive2
+(
+    section_label character varying(30),
 	dist_from_last double precision,
 -- ADD FID to hapms_master before running this to reduce the ID size to integer
 	id bigint[]
@@ -30,7 +31,3 @@ INSERT INTO client.testrecursive2 (section_label, dist_from_last, id)
 	SELECT section_label, dist_from_last, breadcrumb::bigint[] AS id
     	FROM walk_network
         ORDER BY breadcrumb;
-
-SELECT *
-	FROM client.testrecursive2
-    ORDER BY id asc;
