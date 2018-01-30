@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION client.walk_network(_dir_key int,
                                               _sect_start varchar(30),
-                                              _sect_funct int default 1,
+                                              _sect_funct int default null,
                                               _sect_end varchar(30) default null,
                                               _op_code int default null,
                                               _road int default null
@@ -29,15 +29,15 @@ EXECUTE format
 
     WITH RECURSIVE walk_network(geom, gid, section_label, dist_from_last) AS (
         SELECT geom, fid as gid, section_label, 0.00::float AS dist_from_last, ARRAY[fid] AS trail
-            FROM client.hapms_master
+            FROM client.hapms_copy
             WHERE section_label = $2
         UNION ALL
         SELECT n.geom, n.fid as gid, n.section_label, ST_Distance(ST_EndPoint(w.geom), ST_StartPoint(n.geom)) AS dist_from_last, trail || fid
-            FROM client.hapms_master n, walk_network w
+            FROM client.hapms_copy n, walk_network w
             WHERE ST_DWithin(ST_EndPoint(w.geom), ST_StartPoint(n.geom), 6.50)
             AND ($4 is null OR w.section_label != $4)
             AND direction_key = $1
-            AND section_function = $3
+            AND ($3 is null OR section_function = $3)
             AND ($5 is null OR operational_area != $5)
             AND ($6 is null OR road != $6)
     )
