@@ -26,6 +26,8 @@
     <loaded-nodes>
       <connection connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4">
         <schema name="client" object-types="function" />
+        <schema name="pg_catalog" object-types="function" />
+        <schema name="public" object-types="function" />
       </connection>
     </loaded-nodes>
   </component>
@@ -39,10 +41,11 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/f_update_geom.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" current-schema="client" />
-    <mapping file-url="file://$PROJECT_DIR$/script_examples/db_create.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" current-schema="information_schema" />
     <mapping file-url="file://$PROJECT_DIR$/scripts/functions/walk_network.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" current-schema="client" />
     <mapping file-url="file://$PROJECT_DIR$/script_examples/ext_create.sql" connection-id="virtual-postgres-connection" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/f_update_geom.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" current-schema="client" />
+    <mapping file-url="file://$PROJECT_DIR$/script_examples/db_create.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" current-schema="information_schema" />
+    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/junction_select.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" current-schema="client" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">
     <method-browser />
