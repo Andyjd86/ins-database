@@ -1,8 +1,12 @@
+import datetime
+
 from shapely.geometry import point, linestring, multipoint
 from shapely import wkb
 import psycopg2
+from jinja2 import Environment, FileSystemLoader
 import psycopg2.extras
 from psycopg2.sql import SQL, Identifier
+from itertools import groupby
 
 # Can you wrap connections into a module??
 conn = None
@@ -58,44 +62,47 @@ def junction_select(route_table, vertex_table, junct_road, junct_list, search_ra
     return r
 
 
-def interpolate_point(schema, line_table, point_geom, line_field, line_filter):
-    print(point_geom)
+def interpolate_point(schema, geometry, line_table, point_geom, line_field, line_filter):
     cur.execute(
         SQL(
             """
             SELECT
-                ST_InterpolatePoint(line.geom_m, (ST_DUMP((%(point_geom)s))).geom)
-            FROM {schema}.{line_table} line
-            WHERE {line_field} = %(line_filter)s;
+                client_id,
+                ST_Distance(line.{_geometry}, (ST_DUMP((%(_point_geom)s))).geom),
+                round(ST_InterpolatePoint(line.{_geometry}, (ST_DUMP((%(_point_geom)s))).geom)::numeric,3)
+            FROM {_schema}.{_line_table} line
+            WHERE {_line_field} = %(_line_filter)s;
             """
-        ).format(schema=Identifier(schema), line_table=Identifier(line_table), line_field=Identifier(line_field)),
-        {'point_geom': point_geom, 'line_filter': line_filter}
+        ).format(_schema=Identifier(schema), _geometry=Identifier(geometry), _line_table=Identifier(line_table), _line_field=Identifier(line_field)),
+        {'_point_geom': point_geom, '_line_filter': line_filter}
     )
     conn.commit()
-    for return_geom in cur.fetchall():
-        return return_geom[0]
+    return_geom = cur.fetchall()
+    #print(min(return_geom,key=lambda x:x[1]))
+    return return_geom
 
 
-def locate_along(schema, line_table, line_measure, line_field, line_filter):
+def locate_along(schema, geometry, line_table, line_measure, line_field, line_filter):
     cur.execute(
         SQL(
             """
             SELECT
-                ST_LocateAlong(line.geom_m, %(line_measure)s)
-            FROM {schema}.{line_table} line
-            WHERE (%(line_filter)s is null OR {line_field} = %(line_filter)s);
+                route_id,
+                ST_LocateAlong(line.{_geometry}, %(_line_measure)s) AS point_geom
+            FROM {_schema}.{_line_table} line
+            WHERE {_line_field} = %(_line_filter)s
+            AND %(_line_measure)s 
+                BETWEEN 
+                    ST_InterpolatePoint({_geometry}, ST_StartPoint({_geometry})) 
+                    AND 
+                    ST_InterpolatePoint({_geometry}, ST_EndPoint({_geometry}));
             """
-        ).format(schema=Identifier(schema), line_table=Identifier(line_table), line_field=Identifier(line_field)),
-        {'line_measure': line_measure, 'line_filter': line_filter}
+        ).format(_schema=Identifier(schema), _geometry=Identifier(geometry), _line_table=Identifier(line_table), _line_field=Identifier(line_field)),
+        {'_line_measure': line_measure, '_line_filter': line_filter}
     )
     conn.commit()
-    for r in cur.fetchall():
-        rt = r[0]
-        # return_geom = wkb.loads(rt,hex=True)
-        print(rt)
-        # print(return_geom)
-        # return return_geom
-        return rt
+    return_geom = cur.fetchall()
+    return return_geom
 
 
 def locate_between(schema, line_table, line_measure_s, line_measure_e, line_field, line_filter):
@@ -295,3 +302,108 @@ def select_route_from_path(schema):
             {'_survey_id': survey_id, '_path_id': path_id, '_path_start': path_start, '_path_end': path_end}
         )
         conn.commit()
+
+
+def build_route_file(survey_list):
+    cur.execute(
+        SQL(
+            """
+                SELECT 
+                    g.survey_id,
+                    g.num_sections,
+                    r.road,
+                    r.direction,
+                    r.lane,
+                    r.end_x,
+                    r.end_y
+                FROM
+                    (SELECT 
+                        survey_id,
+                        COUNT(survey_id) AS num_sections,
+                        MAX(route_order) AS order_match
+                    FROM dfg.routes
+                    GROUP BY survey_id 
+                    HAVING survey_id = ANY (%(_survey_list)s)
+                    ) AS g
+                JOIN
+                    (SELECT
+                        route.survey_id,
+                        hapms.road_number as road,
+                        hapms.direction_code as direction,
+                        collection.lane as lane,
+                        route.route_order,
+                        ST_X(ST_EndPoint(hapms.geom_m)) as end_x, 
+                        ST_Y(ST_EndPoint(hapms.geom_m)) as end_y
+                    FROM dfg.routes route
+                    INNER JOIN client.hapms_master hapms ON route.client_id = hapms.fid
+                    INNER JOIN dfg.collection collection ON route.survey_id = collection.collect_id
+                    ORDER BY route.survey_id, route.route_order
+                    ) as r
+                ON g.survey_id = r.survey_id AND g.order_match = r.route_order;
+            """
+        ).format(),
+        {'_survey_list': survey_list}
+    )
+    conn.commit()
+    while True:
+        layout = cur.fetchone()
+        if layout == None:
+            break
+        print(layout)
+
+        curr.execute(
+            SQL(
+                """
+                    SELECT
+                        route.route_id,
+                        route.survey_id,
+                        hapms.section_label,
+                        hapms.section_start_date,
+                        hapms.section_function_code,
+                        hapms.start_chainage,
+                        hapms.end_chainage,
+                        hapms.direction_code,
+                        collection.lane,
+                        route.route_start,
+                        route.route_end,
+                        ST_X(ST_StartPoint(hapms.geom_m)) as start_x,
+                        ST_Y(ST_StartPoint(hapms.geom_m)) as start_y,
+                        ST_X(ST_EndPoint(hapms.geom_m)) as end_x, 
+                        ST_Y(ST_EndPoint(hapms.geom_m)) as end_y
+                    FROM dfg.routes route
+                    INNER JOIN client.hapms_master hapms ON route.client_id = hapms.fid
+                    INNER JOIN dfg.collection collection ON route.survey_id = collection.collect_id
+                    WHERE route.survey_id = %(_surv_id)s
+                    ORDER BY route.survey_id, route.route_order;
+                """
+            ).format(),
+            {'_surv_id': getattr(layout, 'survey_id')}
+        )
+        conn.commit()
+        template = curr.fetchall()
+        if template == None:
+            break
+        print(template)
+        print_rte(layout, template)
+
+
+def print_rte(layout, template):
+    filename = str(datetime.date.today()) + " " + getattr(layout, 'road') + " " + str(getattr(layout, 'direction')) + " " + "L" + str(getattr(layout, 'lane'))
+    p = Environment(
+        loader=FileSystemLoader("C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\text"),
+        trim_blocks=True)
+    why = p.get_template('route_template.rte')
+    #zoo = why.render(
+            #filename=filename,
+            #route_count=getattr(layout, 'num_sections'),
+            #route_data=template,
+            #end_x=getattr(layout, 'end_x'),
+            #end_y=getattr(layout, 'end_y')
+            #)
+    #print(zoo)
+    why.stream(
+            filename=filename,
+            route_count=getattr(layout, 'num_sections'),
+            route_data=template,
+            end_x=getattr(layout, 'end_x'),
+            end_y=getattr(layout, 'end_y')).dump("C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\text\\" + filename + ".rte")
