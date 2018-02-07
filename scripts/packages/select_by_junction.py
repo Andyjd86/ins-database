@@ -19,6 +19,7 @@ except:
 cur = conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor)
 curr = conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor)
 curt = conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor)
+
 def junction_select(route_table, vertex_table, junct_road, junct_list, search_rad, sect_funct):
     cur.execute(
         SQL(
@@ -143,7 +144,7 @@ def add_measure(schema, line_table, line_field, line_filter):
     conn.commit()
 
 
-def create_routes(schema, route_table, collection_table, route_field, collection_field):
+def create_routes(route_schema, route_table, survey_schema, collection_table, route_field, collection_field):
     cur.execute(
         SQL(
             """
@@ -158,8 +159,8 @@ def create_routes(schema, route_table, collection_table, route_field, collection
                     ST_StartPoint(vertex.geom_m) AS vertex_geom,
                     vertex.{collection_field} AS vertex_gid,
                     ST_Distance(route.geom_m, ST_StartPoint(vertex.geom_m)) AS distance
-                FROM {schema}.{route_table} route
-                JOIN {schema}.{collection_table} vertex
+                FROM {route_schema}.{route_table} route
+                JOIN {survey_schema}.{collection_table} vertex
                 ON ST_DWithin(route.geom_m, ST_StartPoint(vertex.geom_m), 100)
                 UNION ALL
             --Query to select the end points of the collection linestring and the closest point along the closest route.
@@ -172,8 +173,8 @@ def create_routes(schema, route_table, collection_table, route_field, collection
                     ST_EndPoint(vertex.geom_m) AS vertex_geom,
                     vertex.{collection_field} AS vertex_gid,
                     ST_Distance(route.geom_m, ST_EndPoint(vertex.geom_m)) AS distance
-                FROM {schema}.{route_table} route
-                JOIN {schema}.{collection_table} vertex
+                FROM {route_schema}.{route_table} route
+                JOIN {survey_schema}.{collection_table} vertex
                 ON ST_DWithin(route.geom_m, ST_EndPoint(vertex.geom_m), 100)
             ORDER BY vertex_gid, distance ASC
             )
@@ -193,8 +194,8 @@ def create_routes(schema, route_table, collection_table, route_field, collection
             FROM ordered_nearest
             ORDER BY vertex_gid, vertex_node desc, distance;
             """
-            ).format(schema=Identifier(schema), route_table=Identifier(route_table),
-                     collection_table=Identifier(collection_table),
+            ).format(route_schema=Identifier(route_schema), route_table=Identifier(route_table),
+                     survey_schema=Identifier(survey_schema), collection_table=Identifier(collection_table),
                      route_field=Identifier(route_field), collection_field=Identifier(collection_field))
     )
     conn.commit()
@@ -332,8 +333,8 @@ def build_route_file(survey_list):
                         hapms.direction_code as direction,
                         collection.lane as lane,
                         route.route_order,
-                        ST_X(ST_EndPoint(hapms.geom_m)) as end_x, 
-                        ST_Y(ST_EndPoint(hapms.geom_m)) as end_y
+                        ST_X((ST_Dump(ST_LocateAlong(hapms.geom_m,route.route_end))).geom) as end_x, 
+                        ST_Y((ST_Dump(ST_LocateAlong(hapms.geom_m,route.route_end))).geom) as end_y
                     FROM dfg.routes route
                     INNER JOIN client.hapms_master hapms ON route.client_id = hapms.fid
                     INNER JOIN dfg.collection collection ON route.survey_id = collection.collect_id
@@ -366,10 +367,10 @@ def build_route_file(survey_list):
                         collection.lane,
                         route.route_start,
                         route.route_end,
-                        ST_X(ST_StartPoint(hapms.geom_m)) as start_x,
-                        ST_Y(ST_StartPoint(hapms.geom_m)) as start_y,
-                        ST_X(ST_EndPoint(hapms.geom_m)) as end_x, 
-                        ST_Y(ST_EndPoint(hapms.geom_m)) as end_y
+                        ST_X((ST_Dump(ST_LocateAlong(route.geom_c, route.route_start))).geom) as start_x,
+                        ST_Y((ST_Dump(ST_LocateAlong(route.geom_c, route.route_start))).geom) as start_y,
+                        ST_X((ST_Dump(ST_LocateAlong(route.geom_c, route.route_end))).geom) as end_x, 
+                        ST_Y((ST_Dump(ST_LocateAlong(route.geom_c, route.route_end))).geom) as end_y
                     FROM dfg.routes route
                     INNER JOIN client.hapms_master hapms ON route.client_id = hapms.fid
                     INNER JOIN dfg.collection collection ON route.survey_id = collection.collect_id
