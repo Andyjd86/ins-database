@@ -3,8 +3,12 @@
     <words>
       <w>adixon</w>
       <w>andydixon</w>
+      <w>callproc</w>
+      <w>chainage</w>
       <w>cmds</w>
+      <w>fpath</w>
       <w>hapms</w>
+      <w>mogrify</w>
       <w>pgdatabase</w>
       <w>pghost</w>
       <w>pgpass</w>
@@ -14,6 +18,7 @@
       <w>pguser</w>
       <w>postgre</w>
       <w>postgresql</w>
+      <w>proc</w>
       <w>psql</w>
       <w>qgis</w>
       <w>shapefile</w>
