@@ -38,25 +38,19 @@ def shp2psql(base_dir, srid, shp_import):
         subprocess.run(cmds, shell=True, stdout=subprocess.DEVNULL)
 
 
-def create_client_tables():
+def create_client_tables(schema, import_table, shp_import_table, fpath):
     db = MyDatabase()
-    fpath = (
-        'C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\'
-        'data\\text\\TRL - Section data_M6_M27_A47.csv'
-             )
-    # Table name to use in function
-    import_table = "hapms_master"
-    shp_import_table = "hapms_temp"
-    # Calls the function in PostgreSQL
     db.call_proc("client.create_table_hapms", [import_table])
     sql = SQL(
         """
-        COPY client.{_import_table} FROM STDIN WITH CSV HEADER DELIMITER AS ',';
+        COPY {_schema}.{_import_table} FROM STDIN WITH CSV HEADER DELIMITER AS ',';
         """
     ).format(
-        _import_table=Identifier(import_table)
+        _import_table=Identifier(import_table),
+        _schema=Identifier(schema)
     )
+    args = open(fpath)
     # print(sql)
-    db.copy_expert(sql, open(fpath))
+    db.copy_expert(sql, args)
     db.call_proc("client.update_geom", [import_table, shp_import_table])
     db.close()

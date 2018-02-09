@@ -213,8 +213,8 @@ def select_route_from_path(schema):
                     path.path_order as route_order,
                     path.path_id
                 FROM client.project_path path
-                JOIN client.hapms_master route
-                ON path.fid = route.fid
+                JOIN client.master_network route
+                ON path.fid = route.client_id
                 WHERE
                     path_id = %(_path_id)s AND
                     path_order > %(_path_start)s AND
@@ -264,8 +264,8 @@ def build_route_file(survey_list):
                     ST_X((ST_Dump(ST_LocateAlong(hapms.geom_m,route.route_end))).geom) as end_x, 
                     ST_Y((ST_Dump(ST_LocateAlong(hapms.geom_m,route.route_end))).geom) as end_y
                 FROM dfg.routes route
-                INNER JOIN client.hapms_master hapms ON route.client_id = hapms.fid
-                INNER JOIN dfg.collection collection ON route.survey_id = collection.collect_id
+                INNER JOIN client.master_network hapms ON route.client_id = hapms.client_id
+                INNER JOIN dfg.survey collection ON route.survey_id = collection.collect_id
                 ORDER BY route.survey_id, route.route_order
                 ) as r
             ON g.survey_id = r.survey_id AND g.order_match = r.route_order;
@@ -299,8 +299,8 @@ def build_route_file(survey_list):
                     ST_X((ST_Dump(ST_LocateAlong(route.geom_c, route.route_end))).geom) as end_x, 
                     ST_Y((ST_Dump(ST_LocateAlong(route.geom_c, route.route_end))).geom) as end_y
                 FROM dfg.routes route
-                INNER JOIN client.hapms_master hapms ON route.client_id = hapms.fid
-                INNER JOIN dfg.collection collection ON route.survey_id = collection.collect_id
+                INNER JOIN client.master_network hapms ON route.client_id = hapms.client_id
+                INNER JOIN dfg.survey collection ON route.survey_id = collection.collect_id
                 WHERE route.survey_id = %(_survey_id)s
                 ORDER BY route.survey_id, route.route_order;
             """
@@ -350,7 +350,7 @@ def update_geometry(schema, srid):
                 collect.id,
                 locate_dfg.route_id,
                 ST_LocateBetween(collect.geom_m, locate_dfg.start_measure, locate_dfg.end_measure) as geom_s
-            FROM {_schema}.collection collect
+            FROM {_schema}.survey collect
             JOIN
                 (SELECT
                     collects.id,
@@ -358,7 +358,7 @@ def update_geometry(schema, srid):
                     locate_hapms.survey_id,
                     ST_InterpolatePoint(collects.geom_m, (ST_DUMP(locate_hapms.start_point)).geom) as start_measure,
                     ST_InterpolatePoint(collects.geom_m, (ST_DUMP(locate_hapms.end_point)).geom) as end_measure
-                FROM {_schema}.collection collects
+                FROM {_schema}.survey collects
                 JOIN
                     (SELECT
                         route_id,
@@ -366,9 +366,9 @@ def update_geometry(schema, srid):
                         route_order,
                         ST_LocateAlong(line.geom_m, route.route_start) as start_point,
                         ST_LocateAlong(line.geom_m, route.route_end) as end_point
-                    FROM client.hapms_master line
+                    FROM client.master_network line
                     JOIN {_schema}.routes route
-                    ON line.fid = route.client_id
+                    ON line.client_id = route.client_id
                     ) AS locate_hapms
                 ON collects.collect_id = locate_hapms.survey_id
                 ORDER BY survey_id, route_order
