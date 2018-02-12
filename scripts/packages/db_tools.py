@@ -10,7 +10,7 @@ import psycopg2
 
 
 class MyDatabase:
-    def __init__(self, db="24503_M6SMP", user="andydixon", host="localhost"):
+    def __init__(self, db="ins_data_dev", user="andydixon", host="localhost"):
         self.conn = psycopg2.connect(database=db, user=user, host=host)
         self.cur = self.conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor)
         self.proc_cur = self.conn.cursor()

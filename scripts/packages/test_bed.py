@@ -1,38 +1,83 @@
 from scripts.packages.import_tools import *
 from scripts.packages.route_tools import *
 from scripts.packages.lrs_tools import *
+from scripts.packages.table_tools import *
+from datetime import datetime, date
 
+time_start = datetime.now().time()
 
-# shp2psql(
-#     "C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\survey",
-#     '27700',
-#     'dfg.survey'
-# )
+create_schema('client', 'andydixon', 'Holds all the information related to the client network')
 
-# shp2psql(
-#     "C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\spatial",
-#     '27700',
-#     'client.temp_network'
-# )
+create_path_tables()
 
-# create_client_tables('master_network', 'temp_network', 'C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\text\\TRL - Section data_M6_M27_A47.csv')
+create_schema('dfg', 'andydixon', 'Holds all the information related to the deflectograph')
 
-# directions = [(1, '2400M6/9'), (2, '0900M6/624')]
-# for walk_dir in directions:
-#     walk_the_network(walk_dir[1], None, walk_dir[0], 1, None, 42)
+create_survey_tables('dfg')
 
-# TODO
-# TODO routes.sql to insert into path_master.
-# TODO createpath.sql to update path_master geometry.
-# TODO unpack.sql to insert into project_path.
-# TODO table creation scripts for all standard tables.
+shp2psql(
+    "C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\survey",
+    '27700',
+    'dfg.survey'
+)
 
-# add_measure('dfg', 'survey', 'collect_id', None)
+shp2psql(
+    "C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\spatial",
+    '27700',
+    'client.temp_network'
+)
 
-# create_routes('client', 'master_network', 'dfg', 'survey', 'client_id', 'collect_id')
+create_client_tables(
+    'client',
+    'master_network',
+    'temp_network',
+    'C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\text\\TRL - Section data_M6_M27_A47.csv'
+)
 
-# select_route_from_path('dfg')
+directions = [(1, '2400M6/9'), (2, '0900M6/624')]
+for walk_dir in directions:
+    walk_the_network(
+        walk_dir[1],
+        None,
+        walk_dir[0],
+        1,
+        None,
+        42
+    )
 
-# update_geometry('dfg', 27700)
+create_path_geometry()
 
-# build_route_file([1, 2, 3, 4])
+unpack_paths([1, 3])
+
+add_geom('dfg', 'survey', 'geom_m', 'LineString', 27700)
+
+add_measure(
+    'dfg',
+    'survey',
+    'collect_id',
+    None
+)
+
+create_routes(
+    'client',
+    'master_network',
+    'dfg',
+    'survey',
+    'client_id',
+    'collect_id'
+)
+
+select_route_from_path(
+    'dfg'
+)
+
+update_route_geometry(
+    'dfg',
+    27700
+)
+
+build_route_file([1, 2, 3, 4])
+
+time_end = datetime.now().time()
+
+total_time = datetime.combine(date.today(), time_end) - datetime.combine(date.today(), time_start)
+print(total_time)

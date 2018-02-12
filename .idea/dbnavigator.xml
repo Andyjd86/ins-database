@@ -38,10 +38,11 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/junction_select.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" session-id="MAIN" current-schema="client" />
-    <mapping file-url="file://$PROJECT_DIR$/script_examples/ext_create.sql" connection-id="virtual-postgres-connection" session-id="MAIN" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/f_create_table_hapms.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" session-id="MAIN" current-schema="client" />
     <mapping file-url="file://$PROJECT_DIR$/scripts/functions/f_update_geom.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" session-id="MAIN" current-schema="client" />
-    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/walk_network.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" session-id="MAIN" current-schema="client" />
+    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/f_walk_network.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" session-id="MAIN" current-schema="client" />
+    <mapping file-url="file://$PROJECT_DIR$/scripts/functions/f_create_client_tables.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" session-id="MAIN" current-schema="public" />
+    <mapping file-url="file://$PROJECT_DIR$/script_examples/ext_create.sql" connection-id="virtual-postgres-connection" session-id="MAIN" current-schema="" />
     <mapping file-url="file://$PROJECT_DIR$/script_examples/db_create.sql" connection-id="820ad29c-24a3-4394-8559-bfc12c31fda4" session-id="MAIN" current-schema="information_schema" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">

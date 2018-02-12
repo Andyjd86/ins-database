@@ -3,12 +3,16 @@
     <words>
       <w>adixon</w>
       <w>andydixon</w>
+      <w>bigserial</w>
       <w>callproc</w>
       <w>chainage</w>
       <w>cmds</w>
+      <w>deflectograph</w>
       <w>fpath</w>
       <w>hapms</w>
       <w>mogrify</w>
+      <w>oids</w>
+      <w>ordinality</w>
       <w>pgdatabase</w>
       <w>pghost</w>
       <w>pgpass</w>
@@ -16,6 +20,7 @@
       <w>pgport</w>
       <w>pgsql</w>
       <w>pguser</w>
+      <w>plpgsql</w>
       <w>postgre</w>
       <w>postgresql</w>
       <w>proc</w>
@@ -23,6 +28,7 @@
       <w>qgis</w>
       <w>shapefile</w>
       <w>stdin</w>
+      <w>unnest</w>
     </words>
   </dictionary>
 </component>

@@ -6,7 +6,7 @@ BEGIN
 EXECUTE format
     (
     'ALTER TABLE client.%I
-        ADD COLUMN fid bigserial,
+        ADD COLUMN client_id bigserial,
         ADD COLUMN geom geometry,
         ADD COLUMN geom_m geometry;
 
@@ -19,8 +19,10 @@ EXECUTE format
                 sect_label
             FROM client.%I
             ) as hapms_transfer
-        WHERE section_label = sect_label',
-    m_name, m_name, t_name
+        WHERE section_label = sect_label;
+
+    DROP TABLE client.%I',
+    m_name, m_name, t_name, t_name
     );
 END
 $func$ LANGUAGE plpgsql;

@@ -3,11 +3,9 @@ CREATE OR REPLACE FUNCTION client.create_table_hapms(t_name varchar(30))
 $func$
 BEGIN
 
-EXECUTE format('
-    DROP TABLE client.%I;
-
-    CREATE TABLE IF NOT EXISTS client.%I
-    (
+EXECUTE format
+    ('
+    CREATE TABLE client.%I (
         road_class integer,
         road_class_code character varying(12),
         road_class_name character varying(12),
@@ -50,6 +48,12 @@ EXECUTE format('
         plan_reference character varying(48),
         start_chainage numeric(12, 3),
         end_chainage numeric(12, 3)
-    )', t_name, t_name);
+    )
+    WITH (
+    OIDS = FALSE
+    );
+
+    ALTER TABLE client.%I
+        OWNER to andydixon;', t_name, t_name);
 END
 $func$ LANGUAGE plpgsql;

@@ -7,7 +7,88 @@ from scripts.packages.db_tools import MyDatabase
 
 def walk_the_network(sect_start, sect_end=None, dir_key=1, sect_function=None, op_code=None, road=None):
     db = MyDatabase()
-    db.call_proc("client.walk_network", [dir_key, sect_start, sect_function, sect_end, op_code, road])
+    sql = SQL(
+        """
+        -- Create a temporary table with auto_ID ready for the data
+    
+        CREATE TEMP TABLE network_walk
+        (
+            fid int,
+            section_label character varying(30),
+            dist_from_last double precision,
+            client_id_trail bigint[]
+        );
+    
+        -- Starting with a particular section the recursive query looks at the endpoint of that segment and the
+        -- nearest start point of the next segment within 1.00m. it continues in this fashion until it reaches 
+        -- the end of the table or a gap bigger than 1.00m filters can include direction, carriageway type and 
+        -- even an end segment if you want to stop it part way through the table.
+    
+        WITH RECURSIVE walk_network(geom, fid, section_label, dist_from_last) AS 
+        (
+            SELECT 
+                geom, 
+                client_id as fid, 
+                section_label, 
+                0.00::float AS dist_from_last, 
+                ARRAY[client_id] AS trail
+            FROM client.master_network
+            WHERE section_label = %(_sect_start)s
+            UNION ALL
+            SELECT 
+                n.geom, 
+                n.client_id as fid, 
+                n.section_label, 
+                ST_Distance(ST_EndPoint(w.geom), 
+                ST_StartPoint(n.geom)) AS dist_from_last, 
+                trail || client_id
+            FROM client.master_network n, walk_network w
+            WHERE ST_DWithin(ST_EndPoint(w.geom), ST_StartPoint(n.geom), 6.50)
+                AND (%(_sect_end)s is null OR w.section_label != %(_sect_end)s)
+                AND direction_key = %(_dir_key)s
+                AND (%(_sect_function)s is null OR section_function = %(_sect_function)s)
+                AND (%(_op_code)s is null OR operational_area != %(_op_code)s)
+                AND (%(_road)s is null OR road = %(_road)s)
+        )
+        INSERT INTO network_walk
+            (fid, section_label, dist_from_last, client_id_trail)
+            (
+            SELECT 
+                fid, 
+                section_label, 
+                dist_from_last, 
+                trail::bigint[] AS client_id_trail
+            FROM walk_network
+            ORDER BY trail
+            );
+            
+        INSERT INTO client.path_master
+            (fid_trail, fid_last)
+            (
+            SELECT 
+                client_id_trail,
+                fid
+            FROM network_walk 
+            WHERE fid 
+            NOT IN
+                (
+                SELECT
+                    unnest(client_id_trail[0:array_length(client_id_trail,1)-1]) 
+                FROM network_walk
+                )
+            );
+        """
+    ).format(
+    )
+    args = {
+        '_sect_start': sect_start,
+        '_sect_end': sect_end,
+        '_dir_key': dir_key,
+        '_sect_function': sect_function,
+        '_op_code': op_code,
+        '_road': road
+    }
+    db.query(sql, args, False)
 
 
 def junction_select(route_table, vertex_table, junction_road, junction_list, search_rad, sect_function):
@@ -114,7 +195,9 @@ def create_routes(route_schema, route_table, survey_schema, collection_table, ro
         survey_schema=Identifier(survey_schema), collection_table=Identifier(collection_table),
         route_field=Identifier(route_field), collection_field=Identifier(collection_field)
     )
-    args = None
+    args = {
+        None
+    }
     rs_routes = db.query(sql, args, True)
     for route in rs_routes:
         if route is None:
@@ -336,10 +419,10 @@ def print_rte(layout, template):
             end_x=getattr(layout, 'end_x'),
             end_y=getattr(layout, 'end_y'),
             sections=sections
-    ).dump("C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\text\\" + filename + ".rte")
+    ).dump("C:\\Users\\adixon\\Desktop\\Projects\\INS Database\\ins-database\\data\\text\\rte\\" + filename + ".rte")
 
 
-def update_geometry(schema, srid):
+def update_route_geometry(schema, srid):
     db = MyDatabase()
     sql = SQL(
         """
@@ -385,6 +468,77 @@ def update_geometry(schema, srid):
     )
     args = {
         '_srid': srid
+    }
+    db.query(sql, args, False)
+    db.close()
+
+
+def create_path_geometry():
+    db = MyDatabase()
+    sql = SQL(
+        """
+        UPDATE client.path_master
+        SET geom = update_path.geom, new_path = false
+        FROM
+            (
+            SELECT 
+                path_id,
+                fid_last,
+                ST_LineMerge(ST_Union(geom)) as geom 
+            FROM 
+                (
+                SELECT 
+                    geom,
+                    path_id,
+                    fid_last 
+                FROM client.master_network
+                JOIN 
+                    (
+                    SELECT 
+                        path_id,
+                        fid_last,
+                        unnest(fid_trail) as unnest_fid
+                    FROM 
+                        (
+                        SELECT * 
+                        FROM client.path_master
+                        WHERE new_path = true
+                        ) as path_expand
+                    ) as network_path
+                ON client.master_network.client_id = network_path.unnest_fid
+            ) as path_union 
+            GROUP BY path_id, fid_last
+        ) as update_path
+        WHERE path_master.path_id = update_path.path_id;
+        """
+    ).format(
+    )
+    args = {
+        None
+    }
+    db.query(sql, args, False)
+    db.close()
+
+
+def unpack_paths(chosen_path):
+    db = MyDatabase()
+    sql = SQL(
+        """
+        INSERT INTO client.project_path
+            (path_id, fid, path_order)
+            (SELECT 
+                path_id, 
+                ord.fid, 
+                ord.path_order
+            FROM client.path_master, unnest(fid_trail) WITH ORDINALITY ord(fid, path_order)
+            WHERE path_id = ANY (%(_chosen_path)s)
+            ORDER BY path_id
+            );
+        """
+    ).format(
+    )
+    args = {
+        '_chosen_path': chosen_path
     }
     db.query(sql, args, False)
     db.close()

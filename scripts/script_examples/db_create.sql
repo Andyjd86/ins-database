@@ -1,6 +1,6 @@
 CREATE DATABASE ins_data_dev
     WITH
-    OWNER = postgres
+    OWNER = andydixon
     ENCODING = 'UTF8'
     CONNECTION LIMIT = -1;
 

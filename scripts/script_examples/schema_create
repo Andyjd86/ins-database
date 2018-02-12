@@ -1,0 +1,5 @@
+CREATE SCHEMA dfg
+    AUTHORIZATION andydixon;
+
+COMMENT ON SCHEMA dfg
+    IS 'survey schema for deflectograph';

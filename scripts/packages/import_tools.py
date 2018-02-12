@@ -2,6 +2,7 @@ import os
 import subprocess
 from psycopg2.sql import SQL, Identifier
 from scripts.packages.db_tools import MyDatabase
+from scripts.packages.table_tools import create_network_table, update_network_table
 
 
 def shp2psql(base_dir, srid, shp_import):
@@ -40,7 +41,7 @@ def shp2psql(base_dir, srid, shp_import):
 
 def create_client_tables(schema, import_table, shp_import_table, fpath):
     db = MyDatabase()
-    db.call_proc("client.create_table_hapms", [import_table])
+    create_network_table(import_table)
     sql = SQL(
         """
         COPY {_schema}.{_import_table} FROM STDIN WITH CSV HEADER DELIMITER AS ',';
@@ -52,5 +53,5 @@ def create_client_tables(schema, import_table, shp_import_table, fpath):
     args = open(fpath)
     # print(sql)
     db.copy_expert(sql, args)
-    db.call_proc("client.update_geom", [import_table, shp_import_table])
+    update_network_table(import_table, shp_import_table)
     db.close()

@@ -11,11 +11,10 @@ BEGIN
 
 EXECUTE format
     (
-    'DROP TABLE client.network_walk;
+    '
+    -- Create a temporary table with auto_ID ready for the data
 
-    -- Create am empty table with auto_ID ready for the data
-
-    CREATE TABLE client.network_walk
+    CREATE TEMP TABLE client.network_walk
     (
         fid int,
         section_label character varying(30),
@@ -27,13 +26,13 @@ EXECUTE format
     -- within 1.00m. it continues in this fashion until it reaches the end of the table or a gap bigger than 1.00m
     -- filters can include direction, carriageway type and even an end segment if you want to stop it part way through the table.
 
-    WITH RECURSIVE walk_network(geom, gid, section_label, dist_from_last) AS (
+    WITH RECURSIVE walk_network(geom, fid, section_label, dist_from_last) AS (
         SELECT geom, client_id as fid, section_label, 0.00::float AS dist_from_last, ARRAY[client_id] AS trail
-            FROM client.hapms_master
+            FROM client.master_network
             WHERE section_label = $2
         UNION ALL
         SELECT n.geom, n.client_id as fid, n.section_label, ST_Distance(ST_EndPoint(w.geom), ST_StartPoint(n.geom)) AS dist_from_last, trail || client_id
-            FROM client.hapms_master n, walk_network w
+            FROM client.master_network n, walk_network w
             WHERE ST_DWithin(ST_EndPoint(w.geom), ST_StartPoint(n.geom), 6.50)
             AND ($4 is null OR w.section_label != $4)
             AND direction_key = $1
@@ -44,7 +43,8 @@ EXECUTE format
     INSERT INTO client.network_walk(fid, section_label, dist_from_last, client_id_trail)
         SELECT fid, section_label, dist_from_last, trail::bigint[] AS client_id_trail
             FROM walk_network
-            ORDER BY trail') USING _dir_key, _sect_start, _sect_funct, _sect_end, _op_code, _road
+            ORDER BY trail'
+    ) USING _dir_key, _sect_start, _sect_funct, _sect_end, _op_code, _road
     ;
 END
 $func$ LANGUAGE plpgsql;
