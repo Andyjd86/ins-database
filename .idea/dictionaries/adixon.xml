@@ -10,7 +10,10 @@
       <w>deflectograph</w>
       <w>fpath</w>
       <w>hapms</w>
+      <w>iheader</w>
+      <w>ipath</w>
       <w>mogrify</w>
+      <w>northing</w>
       <w>oids</w>
       <w>ordinality</w>
       <w>pgdatabase</w>

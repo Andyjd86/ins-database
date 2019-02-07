@@ -1,0 +1,3 @@
+{% block DATA %}
+OBSERV{{ record_id_term_value }}SFC{{ attr_end_term_value }}1{{ attr_end_term_value }}CR1{{ attr_end_term_value }}0{{ attr_end_term_value }}10{{ record_end_term_value }}
+{% endblock %}

@@ -19,7 +19,7 @@ def create_schema(schema, db_user, schema_comment):
     args = {
         '_schema_comment': schema_comment
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -85,7 +85,7 @@ def create_network_table(network_table):
     args = {
         None
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -118,7 +118,7 @@ def update_network_table(network_table, shape_table):
     args = {
         None
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -160,7 +160,7 @@ def create_path_tables():
     args = {
         None
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -194,7 +194,7 @@ def create_survey_tables(schema):
     args = {
         None
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -214,5 +214,5 @@ def add_geom(schema, geom_table, geom_name, geom_type, srid):
         '_geom_type': geom_type,
         '_srid': srid
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()

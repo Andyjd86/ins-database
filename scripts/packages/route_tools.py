@@ -88,7 +88,7 @@ def walk_the_network(sect_start, sect_end=None, dir_key=1, sect_function=None, o
         '_op_code': op_code,
         '_road': road
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
 
 
 def junction_select(route_table, vertex_table, junction_road, junction_list, search_rad, sect_function):
@@ -134,7 +134,7 @@ def junction_select(route_table, vertex_table, junction_road, junction_list, sea
         'junction_road': junction_road, 'junction_list': junction_list,
         'search_rad': search_rad, 'sect_function': sect_function
     }
-    rs = db.query(sql, args, True)
+    rs = db.standard_query(sql, args, True)
     # print(rs)
     db.close()
     return rs
@@ -198,7 +198,7 @@ def create_routes(route_schema, route_table, survey_schema, collection_table, ro
     args = {
         None
     }
-    rs_routes = db.query(sql, args, True)
+    rs_routes = db.standard_query(sql, args, True)
     for route in rs_routes:
         if route is None:
             break
@@ -246,7 +246,7 @@ def insert_routes(schema, survey_id, client_id, route_start, route_end):
         '_survey_id': survey_id, '_client_id': client_id,
         '_route_start': route_start, '_route_end': route_end
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -268,7 +268,7 @@ def select_route_from_path(schema):
         _schema=Identifier(schema)
     )
     args_path = None
-    rs_path = db.query(sql_path, args_path, True)
+    rs_path = db.standard_query(sql_path, args_path, True)
     for path in rs_path:
         if path is None:
             break
@@ -311,7 +311,7 @@ def select_route_from_path(schema):
             '_survey_id': survey_id, '_path_id': path_id,
             '_path_start': path_start, '_path_end': path_end
         }
-        db.query(sql_survey, args_survey, False)
+        db.standard_query(sql_survey, args_survey, False)
     db.close()
 
 
@@ -357,7 +357,7 @@ def build_route_file(survey_list):
     args_layout = {
         '_survey_list': survey_list
     }
-    rs_layout = db.query(sql_layout, args_layout, True)
+    rs_layout = db.standard_query(sql_layout, args_layout, True)
     for layout in rs_layout:
         if layout is None:
             break
@@ -391,7 +391,7 @@ def build_route_file(survey_list):
         args_template = {
             '_survey_id': getattr(layout, 'survey_id')
         }
-        rs_template = db.query(sql_template, args_template, True)
+        rs_template = db.standard_query(sql_template, args_template, True)
         template = rs_template
         if template is None:
             break
@@ -469,7 +469,7 @@ def update_route_geometry(schema, srid):
     args = {
         '_srid': srid
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -516,7 +516,7 @@ def create_path_geometry():
     args = {
         None
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()
 
 
@@ -540,5 +540,5 @@ def unpack_paths(chosen_path):
     args = {
         '_chosen_path': chosen_path
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()

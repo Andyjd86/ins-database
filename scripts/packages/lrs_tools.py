@@ -20,7 +20,7 @@ def interpolate_point(schema, geometry, line_table, point_geom, line_field, line
     args = {
         '_point_geom': point_geom, '_line_filter': line_filter
     }
-    rs_geom = db.query(sql, args, True)
+    rs_geom = db.standard_query(sql, args, True)
     db.close()
     return rs_geom
 
@@ -47,7 +47,7 @@ def locate_along(schema, geometry, line_table, line_measure, line_field, line_fi
     args = {
         '_line_measure': line_measure, '_line_filter': line_filter
     }
-    rs_geom = db.query(sql, args, True)
+    rs_geom = db.standard_query(sql, args, True)
     db.close()
     return rs_geom
 
@@ -67,7 +67,7 @@ def locate_between(schema, line_table, line_measure_s, line_measure_e, line_fiel
     args = {
         'line_measure_s': line_measure_s, 'line_measure_e': line_measure_e, 'line_filter': line_filter
     }
-    rs_geom = db.query(sql, args, True)
+    rs_geom = db.standard_query(sql, args, True)
     db.close()
     return rs_geom
 
@@ -93,5 +93,5 @@ def add_measure(schema, line_table, line_field, line_filter):
     args = {
         'line_filter': line_filter
     }
-    db.query(sql, args, False)
+    db.standard_query(sql, args, False)
     db.close()

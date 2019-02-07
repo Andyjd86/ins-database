@@ -1,0 +1,17 @@
+{% extends "route_base.rte" %}
+{% block R1_1 %}
+{{ "%-8s" | format(file_version,) }}{{ "%-50s" | format(route_identifier,) }}{{ "%5i" | format(survey_count,) }}
+{% endblock %}
+{% block R2_1 %}
+{% for r2_1 in survey_lanes %}
+{{ "%-30s" | format(r2_1.section_label,) }}{{ "%-2s" | format(r2_1.direction_code,) }}{{ "%-20s" | format('Lane ' + r2_1.lane,) }}{{ "%11.3f" | format(r2_1.route_start,) }}{{ "%11.3f" | format(r2_1.route_end,) }}{{ "%-20s" | format(r2_1.start_ref_marker,) }}{{ "%11.3f" | format(r2_1.start_x,) }}{{ "%11.3f" | format(r2_1.start_y,) }}
+{% endfor %}
+{% endblock %}
+{% block R3_1 %}
+{{ "%-20s" | format(end_ref_marker,) }}{{ "%11.3f" | format(end_x,) }}{{ "%11.3f" | format(end_y,) }}
+{% endblock %}
+{% block R4_1 %}
+{% for r4_1 in sections %}
+{{ "%-30s" | format(r4_1.section_label,) }}{{ "%+11s" | format(r4_1.section_start_date.strftime('%d-%b-%Y'),) }}{{ "%+11s" | format(r4_1.section_end_date.strftime('%d-%b-%Y') if r4_1.section_end_date != None,) }}{{ "%11.3f" | format(r4_1.end_chainage,) }}{{ "%-2s" | format(r4_1.direction_code,) }}{{ "%-4s" | format(r4_1.section_function_code,) }}
+{% endfor %}
+{% endblock %}

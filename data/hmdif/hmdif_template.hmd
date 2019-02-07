@@ -1,0 +1,37 @@
+{% extends "hmdif_base.hmd" %}
+{% block HMSTART %}
+HMSTART {{ hmdif_id_code }} {{ hmdif_version_no }} {{ text_start_id_value }} {{ text_end_id_value }} {{ retv }} {{ aetv }} {{ ritv }}{{ '\r' }}
+{% endblock %}
+{% block TSTART %}
+TSTART{{ retv }}{{ '\r' }}
+SURVEY{{ ritv }}OWNER{{ aetv }}TYPE{{ aetv }}VERSION{{ aetv }}NUMBER{{ aetv }}SUBSECT{{ aetv }}MACHINE{{ aetv }}PREPROC{{ aetv }}SVC{{ aetv }}XSPUSED{{ retv }}{{ '\r' }}
+SECTION{{ ritv }}NETWORK{{ aetv }}LABEL{{ aetv }}SNODE{{ aetv }}LENGTH{{ aetv }}SDATE{{ aetv }}EDATE{{ aetv }}STIME{{ aetv }}ETIME{{ retv }}{{ '\r' }}
+THRESHLD{{ ritv }}FTXSECT{{ aetv }}FTSCHAIN{{ aetv }}FTECHAIN{{ aetv }}FTSDATE{{ aetv }}FTNUM{{ aetv }}PIFIND{{ aetv }}SCODE{{ retv }}{{ '\r' }}
+OBSERV{{ ritv }}DEFECT{{ aetv }}VERSION{{ aetv }}XSECT{{ aetv }}SCHAIN{{ aetv }}ECHAIN{{ retv }}{{ '\r' }}
+OBVAL{{ ritv }}PARM{{ aetv }}OPTION{{ aetv }}VALUE{{ aetv }}PERCENT{{ retv }}{{ '\r' }}
+{% endblock %}
+{% block TEND %}
+TEND{{ ritv }}{{ tend_rec_count }}{{ retv }}{{ '\r' }}
+{% endblock %}
+{% block DSTART %}
+DSTART{{ retv }}{{ '\r' }}
+SURVEY{{ ritv }}{{ tewt.OWNER }}{{ aetv }}{{ tewt.TYPE }}{{ aetv }}{{ tewt.VERSION }}{{ aetv }}{{ tewt.NUMBER }}{{ aetv }}{{ tewt.SUBSECT }}{{ aetv }}{{ tewt.MACHINE }}{{ aetv }}{{ tewt.PREPROC }}{{ aetv }}{{ tewt.SVC }}{{ aetv }}{{ tewt.XSPUSED }}{{ retv }}{{ '\r' }}
+{% for surveys in tewt.survey %}
+	{% for sections in surveys.section %}
+SECTION{{ ritv }}{{sections.NETWORK}}{{ aetv }}{{sections.LABEL}}{{ aetv }}{{sections.SNODE}}{{ aetv }}{{sections.LENGTH}}{{ aetv }}{{sections.SDATE}}{{ aetv }}{{sections.EDATE}}{{ aetv }}{{sections.STIME}}{{ aetv }}{{sections.ETIME}}{{ retv }}{{ '\r' }}
+		{% for thresholds in sections.threshold %}
+THRESHLD{{ ritv }}{{ thresholds.FTXSECT }}{{ aetv }}{{ thresholds.FTSCHAIN }}{{ aetv }}{{ thresholds.FTECHAIN }}{{ aetv }}{{ thresholds.FTSDATE }}{{ aetv }}{{ thresholds.FTNUM }}{{ aetv }}{{ thresholds.PIFIND }}{{ aetv }}{{ thresholds.SCODE }}{{ retv }}{{ '\r' }}
+		{% endfor %}
+		{% for observations in sections.observation %}
+OBSERV{{ ritv }}{{ observations.DEFECT }}{{ aetv }}{{ observations.VERSION }}{{ aetv }}{{ observations.XSECT }}{{ aetv }}{{ observations.SCHAIN }}{{ aetv }}{{ observations.ECHAIN }}{{ retv }}{{ '\r' }}
+OBVAL{{ ritv }}{{ observations.PARM }}{{ aetv }}{{ observations.OPTION }}{{ aetv }}{{ observations.VALUE }}{{ aetv }}{{ observations.PERCENT }}{{ retv }}{{ '\r' }}
+		{% endfor %}
+	{% endfor %}
+{% endfor %}
+{% endblock %}
+{% block DEND %}
+DEND{{ ritv }}{{ tewt.dend_rec_count}}{{ retv }}{{ '\r' }}
+{% endblock %}
+{% block HMEND %}
+HMEND{{ ritv }}{{ tewt.dend_rec_count + tend_rec_count + 2}}{{ retv }}
+{%- endblock %}
